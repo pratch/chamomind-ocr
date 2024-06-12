@@ -7,6 +7,9 @@ from image_processing import crop_text_region
 def main(image_path):
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    # TODO: fix orientation
+    print('Fixing orientation')
 
     print('Cropping text region')
     cropped_img = crop_text_region(img)
