@@ -1,23 +1,43 @@
 import argparse
 import cv2
+import utils
 from PIL import Image
-from image_processing import crop_text_region
-
+from image_processing import crop_text_region, fix_orientation
+from document_processing import extract_fields, identify_doc_type
+from ocr_engine import ocr_easyocr, draw_ocr_results
 
 def main(image_path):
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
-    # TODO: fix orientation
-    print('Fixing orientation')
+    # TODO: fix document orientation
+    print('Fixing document orientation')
+    img = fix_orientation(img)
 
     print('Cropping text region')
     cropped_img = crop_text_region(img)
     cv2.imwrite('cropped.png', cropped_img)
     
-    # TODO: ocr, extract text
+    # ocr, extract all texts 
+    # TODO: add pytesseract, etc.
     print('Performing OCR')
+    ocr_results = ocr_easyocr(cropped_img)
+    ocr_img = draw_ocr_results(cropped_img, ocr_results)
+    cv2.imwrite('ocr_result.png', ocr_img)
+    
+    # TODO: identify doc type based on ocr results
+    doc_type = identify_doc_type(cropped_img, ocr_results)
+    print('Detected document type:', utils.DOC_TYPE_TH[doc_type])
+    
+    # TODO: field extraction 
+    # - read field_positions
+    # - do some smart filtering for each file type
+    # - line height detection for variable lines?
+    res = extract_fields(cropped_img, ocr_results, doc_type)
+    
     print(f'Extracted text from {image_path}:')
+    for r in res:
+        print(r)
 
 
 if __name__ == '__main__':

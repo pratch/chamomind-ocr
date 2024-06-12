@@ -3,6 +3,9 @@ import numpy as np
 
 from utils import cv2_imshow_at_height
 
+def fix_orientation(img):
+    # TODO
+    return img
 
 def crop_text_region(img):
     # convert to grayscale
