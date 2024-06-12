@@ -7,12 +7,12 @@ from image_processing import crop_text_region
 def main(image_path):
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
+
     print('Cropping text region')
     cropped_img = crop_text_region(img)
     cv2.imwrite('cropped.png', cropped_img)
-
-	# TODO: ocr, extract text
+    
+    # TODO: ocr, extract text
     print('Performing OCR')
     print(f'Extracted text from {image_path}:')
 
