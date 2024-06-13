@@ -25,6 +25,8 @@ def main(image_path):
     ocr_img = draw_ocr_results(cropped_img, ocr_results)
     cv2.imwrite('raw_ocr_result.png', ocr_img)
     
+    # TODO: post-process ocr results (mispelling correction) 
+    
     # TODO: identify doc type based on ocr results
     doc_type = identify_doc_type(cropped_img, ocr_results)
     print('Detected document type:', utils.DOC_TYPE_TH[doc_type])
@@ -48,7 +50,7 @@ def main(image_path):
     # create image with bbox of extracted fields only
     filtered_ocr_img = draw_ocr_results(cropped_img, filtered_ocr_results)
     cv2.imwrite('filtered_ocr_result.png', filtered_ocr_img)
-
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Chamomind OCR')

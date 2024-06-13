@@ -5,6 +5,7 @@ from utils import DocumentTypes
 
 
 def identify_doc_type(img, ocr_results):
+    # TODO: support more doc types
     has_juris_record_title = any(
         item[1] == 'หนังสือรับรอง' for item in ocr_results)
     has_juris = any('นิติบุคคล' in item[1] for item in ocr_results)
