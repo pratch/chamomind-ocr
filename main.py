@@ -15,7 +15,7 @@ def main(image_path):
     img = fix_orientation(img)
 
     print('Cropping text region')
-    cropped_img = crop_text_region(img)
+    cropped_img, _, _ = crop_text_region(img)
     cv2.imwrite('cropped.png', cropped_img)
     
     # ocr, extract all texts 

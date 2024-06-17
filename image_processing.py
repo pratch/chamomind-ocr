@@ -49,4 +49,4 @@ def crop_text_region(img):
     '''
     # crop the image
     cropped_img = img[min_y:max_y, min_x:max_x, :]
-    return cropped_img
+    return (cropped_img, (min_x, min_y), (max_x, max_y))
