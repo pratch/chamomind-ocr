@@ -10,6 +10,15 @@ from utils import cv2_imshow_at_height
 
 
 def parse_anylabeling_json(dataset_path):
+    """
+    Parses the JSON files in the specified dataset path and extracts label data including filename, document type, image path, height, width, and bounding box coordinates.
+
+    Parameters:
+    - dataset_path (str): The path to the dataset containing JSON files.
+
+    Returns:
+    - parsed_jsons (list): A list of dictionaries containing the extracted label data for each JSON file in the dataset.
+    """
     parsed_jsons = []
     for json_path in Path(dataset_path).rglob('*.json'): # get all json file paths
         # convert json to dict
@@ -37,16 +46,19 @@ def parse_anylabeling_json(dataset_path):
                     'x2': x2,
                     'y2': y2
                 })
-                #normed_x1, normed_y1 = normed_p1
-                #normed_x2, normed_y2 = normed_p2
             label_data['bboxes'] = bbox_data
-            #print(label_data)
             parsed_jsons.append(label_data)
 
     return parsed_jsons
 
 
 def crop_images_and_adjust_bboxes(parsed_jsons):
+    """
+    Crop images to fit content and adjust bounding boxes for each JSON data in the parsed_jsons list.
+    
+    Args:
+        parsed_jsons (list): A list of dictionaries containing JSON data for each image.
+    """
     for json_data in parsed_jsons:
         # crop image and save as
         image_path = json_data['image_path']
@@ -66,13 +78,15 @@ def crop_images_and_adjust_bboxes(parsed_jsons):
             bbox['y1'] = y1 - min_y
             bbox['x2'] = x2 - min_x
             bbox['y2'] = y2 - min_y
-            #cropped_img = cv2.rectangle(cropped_img, (x1 - min_x, y1 - min_y), (x2 - min_x, y2 - min_y), (0, 255, 0), 2)
-        #print(parsed_jsons[0])
-        #cv2_imshow_at_height('adjusted cropped',cropped_img, 900)
-        #cv2.waitKey(0) 
-        #break
+            
 
 def compute_bbox_stats(parsed_jsons):
+    """
+    Compute statistics on bounding box data from parsed JSONs.
+    
+    Parameters:
+    - parsed_jsons (list): A list of dictionaries containing parsed JSON data.
+    """
     bbox_data = []
     for json_data in parsed_jsons:
         h = json_data['height']
