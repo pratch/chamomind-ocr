@@ -98,7 +98,7 @@ def compute_bbox_stats(parsed_jsons):
     print('== average bbox positions ==')
     print(df.groupby(['doc_type','field']).mean(numeric_only=True))
     print('== stdev bbox positions ==')
-    print(df.groupby(['doc_type','field']).std(numeric_only=True))     
+    print(df.groupby(['doc_type','field']).std(numeric_only=True, ddof=0)) # population stdev to avoid NaN     
                     
 
 if __name__ == "__main__":
@@ -112,4 +112,4 @@ if __name__ == "__main__":
     # print bbox stats by doc type and field (average position, stdev)
     compute_bbox_stats(parsed_jsons)
     
-    # TODO: convert anylabel to fields_position.csv
+    # TODO: convert anylabel to fields_position.csv (using average positions)
