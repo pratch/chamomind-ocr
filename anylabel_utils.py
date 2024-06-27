@@ -6,7 +6,7 @@ import pandas as pd
 import os
 from pathlib import Path
 from image_processing import crop_text_region
-from utils import cv2_imshow_at_height
+from utils import convert_polygon_to_rect, cv2_imshow_at_height
 
 
 def parse_anylabeling_json(dataset_path):
@@ -33,23 +33,36 @@ def parse_anylabeling_json(dataset_path):
             label_data['width']  = label_json['imageWidth']
             bbox_data = []
             for l in label_json['shapes']:
-                #print(l['label'], l['text'])
-                p1, p2 = np.array(l['points'])
-                #normed_p1, normed_p2 = np.round(p1/[w, h], 3), np.round(p2/[w, h], 3)
-                x1, y1 = np.round(p1).astype(int)
-                x2, y2 = np.round(p2).astype(int)
-                bbox_data.append({
-                    'field': l['label'],
-                    'text': l['text'],
-                    'x1': x1,
-                    'y1': y1,
-                    'x2': x2,
-                    'y2': y2
-                })
+                points = l['points']
+                if len(points) > 2:
+                    rect_points = list(convert_polygon_to_rect(points))
+                    bbox_data.append({
+                        'field': l['label'],
+                        'text': l['text'],
+                        'x1': rect_points[0],
+                        'y1': rect_points[1],
+                        'x2': rect_points[2],
+                        'y2': rect_points[3]
+                    })
+                else:
+                    #print(l['label'], l['text'])
+                    p1, p2 = np.array(l['points'])
+                    #normed_p1, normed_p2 = np.round(p1/[w, h], 3), np.round(p2/[w, h], 3)
+                    x1, y1 = np.round(p1).astype(int)
+                    x2, y2 = np.round(p2).astype(int)
+                    bbox_data.append({
+                        'field': l['label'],
+                        'text': l['text'],
+                        'x1': x1,
+                        'y1': y1,
+                        'x2': x2,
+                        'y2': y2
+                    })
             label_data['bboxes'] = bbox_data
             parsed_jsons.append(label_data)
 
     return parsed_jsons
+
 
 
 def crop_images_and_adjust_bboxes(parsed_jsons):

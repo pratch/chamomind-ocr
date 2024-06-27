@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 class DocumentTypes:
@@ -53,3 +54,14 @@ def cv2_imshow_at_height(winname, img, height=900):
     new_w = int(w*height/h)
     resized_img = cv2.resize(img, (new_w, height))
     cv2.imshow(winname, resized_img)
+
+def convert_polygon_to_rect(points):
+    x1 = min(point[0] for point in points)
+    y1 = min(point[1] for point in points)
+    x2 = max(point[0] for point in points)
+    y2 = max(point[1] for point in points)
+    x1 = np.round(x1).astype(int)
+    y1 = np.round(y1).astype(int)
+    x2 = np.round(x2).astype(int)
+    y2 = np.round(y2).astype(int)
+    return x1, y1, x2, y2
