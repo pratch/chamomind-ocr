@@ -34,10 +34,14 @@ def parse_anylabeling_json(dataset_path):
             bbox_data = []
             for l in label_json['shapes']:
                 #print(l['label'], l['text'])
-                p1, p2 = np.array(l['points'])
+                points = np.array(l['points']) # can be rect or polygon
+                x_arr = [np.round(p[0]).astype(int) for p in points]
+                y_arr = [np.round(p[1]).astype(int) for p in points]
+                x1 = min(x_arr) # convert polygon to enclosing rect
+                y1 = min(y_arr)
+                x2 = max(x_arr)
+                y2 = max(y_arr)
                 #normed_p1, normed_p2 = np.round(p1/[w, h], 3), np.round(p2/[w, h], 3)
-                x1, y1 = np.round(p1).astype(int)
-                x2, y2 = np.round(p2).astype(int)
                 bbox_data.append({
                     'field': l['label'],
                     'text': l['text'],
