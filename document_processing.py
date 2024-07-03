@@ -4,12 +4,17 @@ import utils
 from utils import DocumentTypes, is_similar
 
 
+def text_equivalent(text1, text2):
+    # TODO: find levenshtein(t1,t2) <= 2
+    return text1 == text2
+
 def identify_doc_type(img, ocr_results):
     # TODO: support more doc types
-    has_juris_record_title = any(item[1] == 'หนังสือรับรอง' for item in ocr_results)
+    has_juris_record_title = any(text_equivalent(item[1], 'หนังสือรับรอง') for item in ocr_results)
     has_juris = any('นิติบุคคล' in item[1] for item in ocr_results)
     # print(has_juris_record_title, has_juris)
     is_juris_record = has_juris_record_title and has_juris
+    
 
     has_juris_regis_title = any(is_similar(item[1], 'ใบสำคัญแสดงการจดทะเบียนห้างหุ้นส่วนบริษัท', 5) == 'ใบสำคัญแสดงการจดทะเบียนห้างหุ้นส่วนบริษัท' for item in ocr_results)
     has_juris_regis = any('กรมพัฒนาธรุกิจการค้า' in is_similar(item[1], 'กรมพัฒนาธรุกิจการค้า', 3) for item in ocr_results)
