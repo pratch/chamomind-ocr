@@ -1,3 +1,4 @@
+import Levenshtein
 import cv2
 import numpy as np
 
@@ -49,6 +50,13 @@ DOC_TYPE_TH = {
     DocumentTypes.IMMIGRATE: 'ตม.6',
 }
 
+search_words = {
+    "ค้นหาข้อมูลคนต่างด้าว": 3, #foreign_data
+    "ข้อมูลคนต่างด้าว": 3, #foreign_data
+    "กรมพัฒนาธุรกิจการค้า": 3, # juris_regis
+    "ใบสำคัญแสดงการจดทะเบียนห้างหุ้นส่วน": 5, # juris_regis
+}
+
 def cv2_imshow_at_height(winname, img, height=900):
     h, w, _ = img.shape
     new_w = int(w*height/h)
@@ -56,12 +64,18 @@ def cv2_imshow_at_height(winname, img, height=900):
     cv2.imshow(winname, resized_img)
 
 def convert_polygon_to_rect(points):
-    x1 = min(point[0] for point in points)
-    y1 = min(point[1] for point in points)
-    x2 = max(point[0] for point in points)
-    y2 = max(point[1] for point in points)
-    x1 = np.round(x1).astype(int)
-    y1 = np.round(y1).astype(int)
-    x2 = np.round(x2).astype(int)
-    y2 = np.round(y2).astype(int)
+    x_arr = [np.round(p[0]).astype(int) for p in points]
+    y_arr = [np.round(p[1]).astype(int) for p in points]
+    x1 = min(x_arr) # convert polygon to enclosing rect
+    y1 = min(y_arr)
+    x2 = max(x_arr)
+    y2 = max(y_arr)
     return x1, y1, x2, y2
+
+# ฟังก์ชันคำนวณ Levenshtein distance
+def is_similar(target, text, threshold):
+    distance = Levenshtein.distance(target, text)
+    if distance <= threshold:
+        return text
+    else:
+        return target

@@ -3,6 +3,7 @@ import json
 import cv2
 import numpy as np
 import pandas as pd
+import csv
 import os
 from pathlib import Path
 from image_processing import crop_text_region
@@ -34,33 +35,17 @@ def parse_anylabeling_json(dataset_path):
             bbox_data = []
             for l in label_json['shapes']:
                 points = l['points']
-                if len(points) > 2:
-                    rect_points = list(convert_polygon_to_rect(points))
-                    bbox_data.append({
-                        'field': l['label'],
-                        'text': l['text'],
-                        'x1': rect_points[0],
-                        'y1': rect_points[1],
-                        'x2': rect_points[2],
-                        'y2': rect_points[3]
-                    })
-                else:
-                    #print(l['label'], l['text'])
-                    p1, p2 = np.array(l['points'])
-                    #normed_p1, normed_p2 = np.round(p1/[w, h], 3), np.round(p2/[w, h], 3)
-                    x1, y1 = np.round(p1).astype(int)
-                    x2, y2 = np.round(p2).astype(int)
-                    bbox_data.append({
-                        'field': l['label'],
-                        'text': l['text'],
-                        'x1': x1,
-                        'y1': y1,
-                        'x2': x2,
-                        'y2': y2
-                    })
+                x1, y1, x2, y2 = convert_polygon_to_rect(points)
+                bbox_data.append({
+                    'field': l['label'],
+                    'text': l['text'],
+                    'x1': x1,
+                    'y1': y1,
+                    'x2': x2,
+                    'y2': y2
+                })
             label_data['bboxes'] = bbox_data
             parsed_jsons.append(label_data)
-
     return parsed_jsons
 
 
@@ -125,18 +110,114 @@ def compute_bbox_stats(parsed_jsons):
     print('== average bbox positions ==')
     print(df.groupby(['doc_type','field']).mean(numeric_only=True))
     print('== stdev bbox positions ==')
-    print(df.groupby(['doc_type','field']).std(numeric_only=True, ddof=0)) # population stdev to avoid NaN     
+    print(df.groupby(['doc_type','field']).std(numeric_only=True, ddof=0)) # population stdev to avoid NaN
+
+    print('== stdev bbox positions but more 0.01 ==')
+    std_df = df.groupby(['doc_type', 'field']).std(numeric_only=True, ddof=0)
+    filtered_std_df = std_df[std_df >= 0.01].dropna()
+    print(filtered_std_df)
+
+    return df   
+
+
+def convert_to_fields_position_csv(parsed_jsons, output_dir):
+
+    df = compute_bbox_stats(parsed_jsons)
+    
+    avg_df = df.groupby(['doc_type', 'field']).mean(numeric_only=True).reset_index()
+
+    # Round to 4 decimal places
+    avg_df = avg_df.round({'normed_x1': 4, 'normed_y1': 4})
+
+    # Rename normed_x1, normed_y1
+    avg_df = avg_df.rename(columns={'normed_x1': 'x1', 'normed_y1': 'y1'})
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Group by doc_type and save each group to a separate CSV file
+    for doc_type, group in avg_df.groupby('doc_type'):
+        group = group[['field', 'x1', 'y1']]
+        output_csv = os.path.join(output_dir, f'{doc_type}_fields.csv')
+        group.to_csv(output_csv, index=False)
+        print(f'Successfully saved to {output_csv}')
+
+def convert_to_fields_fix_position_csv(parsed_jsons, output_dir):
+
+    # Define fields for each doc_type
+    fields_by_doc_type = {
+        'app_receipt': ['doc_title', 'signature'],
+        'employer_ack': ['doc_title', 'employer_field', 'employer_name'],
+        'ework': ['doc_title_th', 'doc_title_en', 'employee_name_field_th', 'employee_name_field_en', 'employee_name', 
+                  'foreign_id_field_th', 'foreign_id_field_en', 'foreign_id', 'passport_id_field_th', 'passport_id_field_en',
+                  'passport_id', 'employ_cert_id_field_th', 'employ_cert_id_field_en', 'employ_cert_id', 'employ_end_date_field_th',
+                  'employ_end_date_field_en', 'employ_end_date'],
+        'foreign_data': ['doc_title', 'foreign_data', 'foreign_id_field', 'foreign_id', 'full_name_field', 
+                         'full_name', 'address_field', 'address', 'nationality_field', 'nationality',
+                         'job_type_field', 'job_type', 'passport_id_field', 'passport_id', 'sex_field', 'sex',
+                         'cert_id_field', 'cert_id', 'cert_status_field', 'cert_status', 'expire_date_filed',
+                         'expire_date', 'health_check_field', 'health_check', 'id_expire_date_field', 'id_expire_date',
+                         'visa_expire_date_field', 'visa_expire_date', 'passport_expire_date_field', 'passport_expire_date', 'register_date_field',
+                         'register_date', 'birth_date_field', 'birth_date', 'employer_field', 'employer',
+                         'business_type_field', 'business_type', 'work_address_field', 'work_address'],
+        'immigrate': ['doc_title_en', 'doc_title_th', 'departure_card_th', 'departure_card_en','admit_date_field', 
+                      'admit_date', 'valid_until_date_field', 'valid_until_date', 'immigrate_id'],
+        'juris_record': ['doc_title','company_field', 'company_name', 'committee_num', 'capital_field',
+                         'capital_amount', 'head_office_field', 'head_office_address', 'page_no'],
+        'juris_regis': ['regis_id_field', 'regis_id', 'form_title', 'dbd_title', 'doc_title', 
+                        'cert_purpose_text', 'company_name', 'juris_declare_text', 'regis_date', 'issue_date'],
+        'passport':['passport_id', 'first_name', 'last_name', 'nationality', 'birth_date', 
+                    'sex', 'issue_date', 'expire_date', 'birth_place'],
+        'pay_receipt':['doc_title', 'payer_field', 'payer_name', 'employer_field', 'employer_name'],
+        'permit50':['doc_title', 'foreign_id', 'cert_id', 'thai_name', 'passport_id', 
+                    'employer_name', 'expire_date']
+         
+
+        # เพิ่มเติม doc_type และ fields ที่ต้องการ
+    }
+
+    df = compute_bbox_stats(parsed_jsons)
+    avg_df = df.groupby(['doc_type', 'field']).mean(numeric_only=True).reset_index()
+
+    # Round to 4 decimal places
+    avg_df = avg_df.round({'normed_x1': 4, 'normed_y1': 4})
+
+    # Rename normed_x1, normed_y1
+    avg_df = avg_df.rename(columns={'normed_x1': 'x1', 'normed_y1': 'y1'})
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Group by doc_type and save each group to a separate CSV file
+    for doc_type, group in avg_df.groupby('doc_type'):
+        if doc_type in fields_by_doc_type:
+            fields = fields_by_doc_type[doc_type]
+
+            # Select only the desired columns
+            group = group[group['field'].isin(fields)][['field', 'x1', 'y1']]
+            output_csv = os.path.join(output_dir, f'{doc_type}_fields.csv')
+            group.to_csv(output_csv, index=False)
+            print(f'Successfully saved to {output_csv}')
+        else:
+            print(f'Error {doc_type}')
                     
 
 if __name__ == "__main__":
     dataset_path = 'orig_doc_by_type'
 
+    # กำหนดรายชื่อ fields ที่ต้องการ
+    fields = ['company_field', 'company_name']
+
     parsed_jsons = parse_anylabeling_json(dataset_path)
     #print(len(parsed_jsons))
-    
+
     crop_images_and_adjust_bboxes(parsed_jsons)
     
     # print bbox stats by doc type and field (average position, stdev)
     compute_bbox_stats(parsed_jsons)
     
     # TODO: convert anylabel to fields_position.csv (using average positions)
+    #convert_to_fields_position_csv(parsed_jsons, 'field_positions')
+    convert_to_fields_fix_position_csv(parsed_jsons, 'field_positions')
+
+    
