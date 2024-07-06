@@ -152,6 +152,7 @@ def convert_to_fields_fix_position_csv(parsed_jsons, output_dir):
                   'foreign_id_field_th', 'foreign_id_field_en', 'foreign_id', 'passport_id_field_th', 'passport_id_field_en',
                   'passport_id', 'employ_cert_id_field_th', 'employ_cert_id_field_en', 'employ_cert_id', 'employ_end_date_field_th',
                   'employ_end_date_field_en', 'employ_end_date'],
+        'foreign_ack': ['doc_title', 'foreign_field', 'foreign_name'],
         'foreign_data': ['doc_title', 'foreign_data', 'foreign_id_field', 'foreign_id', 'full_name_field', 
                          'full_name', 'address_field', 'address', 'nationality_field', 'nationality',
                          'job_type_field', 'job_type', 'passport_id_field', 'passport_id', 'sex_field', 'sex',
