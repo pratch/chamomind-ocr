@@ -43,7 +43,9 @@ def eval(parsed_jsons, ocr_engine=ocr_easyocr):
             closest_ocr_result = ocr_results[closest_idx]
             text_pred = closest_ocr_result[1] 
             
-            print('field:', field_name, 'text_true:', text_true, 'text_pred:', text_pred)
+            print('field:', field_name)
+            print('\t text_true:', text_true)
+            print('\t text_pred:', text_pred)
             
         break
 
