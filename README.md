@@ -7,7 +7,11 @@
 - pip install -r requirements.txt
 
 ## Run end-to-end document field extraction
-- python main.py <image path>
+- python main.py \<image path\>
 
 ## Run experiments
 - python -m experiments.create_dataset_from_ocr
+
+## Install and run AnyLabeling
+- pip install anylabeling
+- anylabeling
